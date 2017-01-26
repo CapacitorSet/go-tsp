@@ -99,12 +99,12 @@ func main() {
 		}*/
 
 		bailout := false
-		for _, esaminato := range graph {
-			if esaminato.This == edge.This {
+		for _, currentEdge := range graph {
+			if currentEdge.This == edge.This {
 				bailout = true
 				break
 			}
-			if esaminato.Next == edge.Next {
+			if currentEdge.Next == edge.Next {
 				bailout = true
 				break
 			}
@@ -121,15 +121,15 @@ func main() {
 			}
 			visited[currentEdge.This] = true
 
-			trovato := false
+			found := false
 			for _, item := range graph_temp {
 				if item.This == currentEdge.Next {
 					currentEdge = item
-					trovato = true
+					found = true
 					break
 				}
 			}
-			if !trovato {
+			if !found {
 				break
 			}
 		}
