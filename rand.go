@@ -49,9 +49,6 @@ func (g Graph) Swap(i, j int) {
 }
 
 func (g Graph) Less(i, j int) bool {
-	if i >= len(g) || j >= len(g) {
-		fmt.Printf("graph_of_%d[%d/%d]\n", len(g), i, j)
-	}
 	return g[i].Length < g[j].Length
 }
 
@@ -126,6 +123,11 @@ func printGraph(graph Graph) {
 
 // Returns whether the graph is proper or not
 func evaluateGraph(graph Graph, vertices []Vertex) bool {
+	for _, edge := range graph {
+		if (*edge.Next).ID == -1 {
+			panic("Edge pointing to -1!")
+		}
+	}
 	if len(graph) < len(vertices) - 1 {
 		fmt.Printf("Output graph is shorter than expected: got %d, want %d\n", len(graph), len(vertices) - 1)
 		return false
@@ -138,7 +140,7 @@ func evaluateGraph(graph Graph, vertices []Vertex) bool {
 func main() {
 	r := rand.New(rand.NewSource(0))
 	noOfItems := 2 * 45 // 2 * num. palline
-	vertices := make([]Vertex, noOfItems)
+	vertices := make([]Vertex, noOfItems + 1)
 	var edges Graph
 
 	for i := 0; i < noOfItems; {
@@ -154,19 +156,22 @@ func main() {
 		i++
 	}
 
+	vertices[noOfItems] = Vertex{-1, 0, 0, 0, 1} // Starting point
+
 	for i, da := range vertices {
 		for j, a := range vertices {
 			if da.Kind == a.Kind {
 				continue
 			}
-			if da.Kind == 0 && (da.Colour != a.Colour) {
+			if da.Kind == 0 && da.Colour != a.Colour {
 				continue
 			}
-			if da == a {
+			if a.ID == -1 {
 				continue
 			}
 
 			length := r.Intn(100)
+			// fmt.Printf("%dc%d -> %dc%d has weight %d\n", da.ID, da.Colour, a.ID, a.Colour, length)
 			edges = append(edges, Edge{&(vertices[i]), &(vertices[j]), length})
 		}
 	}
