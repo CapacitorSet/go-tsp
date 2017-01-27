@@ -148,7 +148,7 @@ func main() {
 		length += edge.Length
 	}
 	fmt.Printf("%d edges, length %d\n", len(graph), length)
-	if len(graph) < (- 1) {
-		fmt.Print("Warning: output graph is shorter than expected")
+	if len(graph) < (len(vertices) - 1) {
+		fmt.Print("Warning: output graph is shorter than expected\n")
 	}
 }
