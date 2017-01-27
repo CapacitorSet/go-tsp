@@ -53,7 +53,7 @@ func (g graph) Less(i, j int) bool {
 
 func main() {
 	r := rand.New(rand.NewSource(0))
-	noOfItems := 2 * 45 // 2 * num. palline
+	noOfItems := 2 * 3 // 2 * num. palline
 	vertices := make([]Vertex, noOfItems)
 	var edges, graph, graph_temp graph
 
@@ -115,8 +115,10 @@ func main() {
 
 		currentEdge := edge
 		visited := make(map[*Vertex]bool)
+		doesCycle := false
 		for {
 			if visited[currentEdge.Next] {
+				doesCycle = true
 				break
 			}
 			visited[currentEdge.This] = true
@@ -133,6 +135,9 @@ func main() {
 				break
 			}
 		}
+		if doesCycle {
+			break
+		}
 
 		graph = graph_temp
 	}
@@ -143,4 +148,7 @@ func main() {
 		length += edge.Length
 	}
 	fmt.Printf("%d edges, length %d\n", len(graph), length)
+	if len(graph) < (- 1) {
+		fmt.Print("Warning: output graph is shorter than expected")
+	}
 }
