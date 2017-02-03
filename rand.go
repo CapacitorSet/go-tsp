@@ -140,6 +140,7 @@ func evaluateGraph(graph Graph, vertices []Vertex) bool {
 func main() {
 	r := rand.New(rand.NewSource(0))
 	noOfItems := 2 * 45 // 2 * num. palline
+	noOfContainers := 10
 	vertices := make([]Vertex, noOfItems + 1)
 	var edges Graph
 
@@ -150,7 +151,7 @@ func main() {
 		vertices[i] = Vertex{i, X, Y, Colour, 0}
 		i++
 
-		X = r.Intn(500)
+		X = (500 / noOfContainers) * r.Intn(noOfContainers + 1)
 		Y = 500 - 20
 		vertices[i] = Vertex{i, X, Y, Colour, 1}
 		i++
