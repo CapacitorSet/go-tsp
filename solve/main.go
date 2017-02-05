@@ -17,40 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
+	"io/ioutil"
 	"sort"
 )
-
-type Colour int
-type Kind int
-
-type Vertex struct {
-	ID     int
-	X, Y   int
-	Colour // 0, 1, 2
-	Kind   // 0, 1: 0 -> 1
-}
-
-type Edge struct {
-	This, Next *Vertex
-	Length     int
-}
-
-type Graph []Edge
-
-func (g Graph) Len() int {
-	return len(g)
-}
-
-func (g Graph) Swap(i, j int) {
-	g[i], g[j] = g[j], g[i]
-}
-
-func (g Graph) Less(i, j int) bool {
-	return g[i].Length < g[j].Length
-}
 
 func findShortestPath(vertices []Vertex, edges Graph) Graph {
 	var graph, graph_temp Graph
@@ -113,12 +85,44 @@ func findShortestPath(vertices []Vertex, edges Graph) Graph {
 }
 
 func printGraph(graph Graph) {
-	length := 0
-	for _, edge := range graph {
+	// graph is sorted by length;
+	// "sort" it by logical order (a -> b, b -> c, c -> d)
+	var newGraph Graph
+	thisId := -1
+	for {
+		done := true
+		for _, edge := range graph {
+			if (*edge.This).ID != thisId {
+				continue;
+			}
+			done = false;
+			newGraph = append(newGraph, edge)
+			thisId = (*edge.Next).ID
+		}
+		if done {
+			break;
+		}
+	}
+
+	length := float64 (0)
+	for _, edge := range newGraph {
 		fmt.Printf("%d -> %d\n", (*edge.This).ID, (*edge.Next).ID)
 		length += edge.Length
 	}
-	fmt.Printf("%d edges, length %d\n", len(graph), length)
+	fmt.Printf("%d edges, length %#v\n", len(newGraph), length)
+
+	sfile, err := os.Create("solution.json")
+	if err != nil {
+		panic(err)
+	}
+	text, err := json.Marshal(newGraph)
+	if err != nil {
+		panic(err)
+	}
+	_, err = sfile.Write(text)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Returns whether the graph is proper or not
@@ -138,48 +142,50 @@ func evaluateGraph(graph Graph, vertices []Vertex) bool {
 }
 
 func main() {
-	r := rand.New(rand.NewSource(0))
 	noOfItems := 2 * 45 // 2 * num. palline
-	noOfContainers := 10
 	vertices := make([]Vertex, noOfItems + 1)
-	var edges Graph
+	id2vertex := make(map[int](*Vertex)) // For quicker deserialization
 
-	for i := 0; i < noOfItems; {
-		X := r.Intn(500)
-		Y := r.Intn(500 - 40)
-		Colour := Colour(r.Intn(3))
-		vertices[i] = Vertex{i, X, Y, Colour, 0}
-		i++
-
-		X = (500 / noOfContainers) * r.Intn(noOfContainers + 1)
-		Y = 500 - 20
-		vertices[i] = Vertex{i, X, Y, Colour, 1}
-		i++
+	vtext, err := ioutil.ReadFile("vertices.json")
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(vtext, &vertices)
+	if err != nil {
+		panic(err)
+	}
+	for i, vertex := range vertices {
+		id2vertex[vertex.ID] = &vertices[i]
 	}
 
-	vertices[noOfItems] = Vertex{-1, 0, 0, 0, 1} // Starting point
+	var edges Graph
 
-	for i, da := range vertices {
-		for j, a := range vertices {
-			if da.Kind == a.Kind {
-				continue
-			}
-			if da.Kind == 0 && da.Colour != a.Colour {
-				continue
-			}
-			if a.ID == -1 {
-				continue
-			}
-
-			length := r.Intn(100)
-			// fmt.Printf("%dc%d -> %dc%d has weight %d\n", da.ID, da.Colour, a.ID, a.Colour, length)
-			edges = append(edges, Edge{&(vertices[i]), &(vertices[j]), length})
+	etext, err := ioutil.ReadFile("edges.json")
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(etext, &edges)
+	if err != nil {
+		panic(err)
+	}
+	// Note: at this time, the edge pointers are messed up.
+	// They must be fixed to point to vertices.
+	for i, edge := range edges {
+		var found bool
+		edges[i].This, found = id2vertex[(*edge.This).ID]
+		if !found {
+			panic("Couldn't remap pointers")
+		}
+		edges[i].Next, found = id2vertex[(*edge.Next).ID]
+		if !found {
+			panic("Couldn't remap pointers")
 		}
 	}
 
 	graph := findShortestPath(vertices, edges)
 
 	if evaluateGraph(graph, vertices) {
+		printGraph(graph)
 		os.Exit(0)
 	}
 

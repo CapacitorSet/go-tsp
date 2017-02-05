@@ -29,3 +29,18 @@ The points are stored in an array of structs. The vertices are stored in an arra
 The list of edges is sorted, and then iterated.
 
 An "output graph" is stored in memory; a "temporary graph" is created at each iteration. We attempt to add the edge to this graph, then verify that no vertex has degree three (by verifying that no existing edge has the same source or the same destination as the candidate), then verify that there are no loops (by traversing the graph starting with the candidate edge, then marking each edge as visited, then failing if we traverse an edge we already visited and passing if we eventually find an edge that leads to nowhere, i.e. to a vertex that is not in the temporary graph), then copy the temporary graph in the output graph and do the next iteration.
+
+## Usage
+
+```
+# Compile
+cd datagen
+go build
+cd ..
+cd solve
+go build
+cd ..
+
+datagen/datagen # Generate data and write to {edges,vertices}.json
+solve/solve # Solve the problem
+```
